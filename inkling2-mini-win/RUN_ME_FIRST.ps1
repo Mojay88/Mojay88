@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  1-Click Master Orchestrator — EXACT Unbiased Bob Video Setup on Windows 11 (RTX 3090 24GB):
+  1-Click Master Orchestrator - EXACT Unbiased Bob Video Setup on Windows 11 (RTX 3090 24GB):
   1) Preflight check.
   2) Auto-installs missing build prerequisites (VS 2022 C++, CUDA Toolkit 12.8 without touching Driver 580.88, Git, Python, Node).
   3) Builds maya-ik2.exe (sm_86) + maya-vision.exe (CPU), downloads Unsloth UD-Q4_K_XL (Old_Support) + Thinking Machines mtp.safetensors.

@@ -21,7 +21,7 @@ function Write-Status($Label, $State, $Detail) {
     Write-Host ("[{0,-4}] {1,-26} {2}" -f $State, $Label, $Detail) -ForegroundColor $color
 }
 
-Write-Host "`n=== Inkling 2 Mini — Windows RTX 3090 Preflight Check ===`n" -ForegroundColor Cyan
+Write-Host "`n=== Inkling 2 Mini - Windows RTX 3090 Preflight Check ===`n" -ForegroundColor Cyan
 
 # 1. Disk Space
 $drive = Get-PSDrive -Name $ModelDrive -ErrorAction SilentlyContinue

@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-  Installs and configures the Pi coding harness (@earendil-works/pi-coding-agent) — the exact coding harness
-  used by Unbiased Bob in the video — wired to Inkling 2 Mini on http://127.0.0.1:8094/v1.
+  Installs and configures the Pi coding harness (@earendil-works/pi-coding-agent) - the exact coding harness
+  used by Unbiased Bob in the video - wired to Inkling 2 Mini on http://127.0.0.1:8094/v1.
   Safely merges into ~/.pi/agent/models.json without deleting existing providers.
 #>
 [CmdletBinding()]

@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Track B Installer (Zero-Compile, ~5 minutes): Downloads Unsloth's optimized Windows llama.cpp build
-  (b12649-mix-c7059d6, CUDA 12 portable — works directly with NVIDIA Driver 580.88) plus the root
+  (b12649-mix-c7059d6, CUDA 12 portable - works directly with NVIDIA Driver 580.88) plus the root
   mainline UD-Q4_K_XL GGUF, F16 vision projector, and Q8_0 DSpark drafter.
 #>
 [CmdletBinding()]
