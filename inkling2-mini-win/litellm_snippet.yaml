@@ -1,0 +1,7 @@
+# Optional LiteLLM model_list entry (add after backing up your config.yaml)
+# Replace <HOST_IP> with your Windows GPU host LAN or Tailscale IP.
+  - model_name: mojay-inkling-code
+    litellm_params:
+      model: openai/inkling-2-mini
+      api_base: http://<HOST_IP>:8094/v1
+      api_key: none
