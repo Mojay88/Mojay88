@@ -1,17 +1,20 @@
 <#
 .SYNOPSIS
-  1-Click Master Orchestrator for Inkling 2 Mini on Windows 11 (RTX 3090 24GB).
-  1) Runs preflight check.
-  2) Auto-picks Track A (maya-ik2, 130-210 tok/s) if VS C++ Build Tools + CUDA Toolkit are present,
-     otherwise runs Track B (Unsloth llama.cpp b12649, zero-compile, 75-105 tok/s) immediately.
-  3) Launches Inkling 2 Mini on GPU0 (:8094) with safe GPU0 swap + live smoke test.
+  1-Click Master Orchestrator — EXACT Unbiased Bob Video Setup on Windows 11 (RTX 3090 24GB):
+  1) Preflight check.
+  2) Auto-installs missing build prerequisites (VS 2022 C++, CUDA Toolkit 12.8 without touching Driver 580.88, Git, Python, Node).
+  3) Builds maya-ik2.exe (sm_86) + maya-vision.exe (CPU), downloads Unsloth UD-Q4_K_XL (Old_Support) + Thinking Machines mtp.safetensors.
+  4) Installs & wires Pi coding harness (~/.pi/agent/models.json) to http://127.0.0.1:8094/v1.
+  5) Safely frees GPU0 (:8092 -> rollback anytime via 05_rollback_to_finance.ps1), launches maya-ik2 with exact video flags,
+     verifies resident=1 and runs the golden smoke test at reasoning_effort=minimal (0.1).
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet("auto", "maya", "unsloth")]
-    [string]$Mode = "auto",
+    [ValidateSet("video", "unsloth")]
+    [string]$Mode = "video",
     [int]$MaxContext = 131072,
-    [int]$Port = 8094
+    [int]$Port = 8094,
+    [switch]$SkipPi
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,33 +23,22 @@ $kitDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # 1. Preflight
 & (Join-Path $kitDir "01_preflight_check.ps1")
 
-# 2. Decide Track A vs Track B
-if ($Mode -eq "auto") {
-    $hasNvcc = [bool](Get-Command nvcc -ErrorAction SilentlyContinue) -or
-        [bool](Get-ChildItem "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v*\bin\nvcc.exe" -ErrorAction SilentlyContinue | Select-Object -First 1)
-    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-    $hasVs = $false
-    if (Test-Path $vswhere) {
-        $vsPath = & $vswhere -latest -prerelease -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-        $hasVs = [bool]$vsPath
-    }
-    $hasGit = [bool](Get-Command git -ErrorAction SilentlyContinue)
+if ($Mode -eq "video") {
+    # 2. Ensure all build prerequisites are installed (preserving NVIDIA Driver 580.88)
+    & (Join-Path $kitDir "00_install_prereqs_win.ps1") -SkipNodeForPi:$SkipPi
 
-    if ($hasNvcc -and $hasVs -and $hasGit) {
-        $Mode = "maya"
-        Write-Host "`n[AUTO] Build tools detected -> Selecting Track A (maya-ik2, 130-210 tok/s)." -ForegroundColor Green
-    } else {
-        $Mode = "unsloth"
-        Write-Host "`n[AUTO] Build tools absent -> Selecting Track B (Unsloth llama.cpp b12649, 5-min zero-compile)." -ForegroundColor Yellow
-    }
-}
-
-# 3. Install chosen track
-if ($Mode -eq "maya") {
+    # 3. Build maya-ik2 + maya-vision + download weights & DSpark drafter
     & (Join-Path $kitDir "02_install_maya_ik2.ps1") -MaxContext $MaxContext
-} else {
-    & (Join-Path $kitDir "03_install_unsloth_llamacpp.ps1")
-}
 
-# 4. Launch & verify
-& (Join-Path $kitDir "04_start_inkling.ps1") -Engine $Mode -MaxContext $MaxContext -Port $Port
+    # 4. Install & configure Pi coding harness
+    if (-not $SkipPi) {
+        & (Join-Path $kitDir "06_setup_pi_harness.ps1") -Port $Port -ContextWindow $MaxContext
+    }
+
+    # 5. Launch maya-ik2 on GPU0 & verify resident=1 + live smoke test
+    & (Join-Path $kitDir "04_start_inkling.ps1") -Engine maya -MaxContext $MaxContext -Port $Port
+} else {
+    # Optional fast zero-compile fallback (Unsloth llama.cpp b12649)
+    & (Join-Path $kitDir "03_install_unsloth_llamacpp.ps1")
+    & (Join-Path $kitDir "04_start_inkling.ps1") -Engine unsloth -MaxContext $MaxContext -Port $Port
+}

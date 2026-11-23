@@ -1,35 +1,31 @@
-# Inkling 2 Mini — Windows 11 RTX 3090 (24GB) Deployment Kit
+# Inkling 2 Mini — Exact Video Setup Kit (Windows 11 + RTX 3090 24GB)
 
-حزمة جاهزة ومؤتمتة لتنزيل وتشغيل **Inkling 2 Mini (`UD-Q4_K_XL`)** بأعلى سرعة وأمان كامل على جهاز Windows 11 بكرت **RTX 3090 (24GB, `sm_86`)** دون تعديل تعريف الشاشة أو التأثير على GPU1.
+حزمة مؤتمتة 100% تطبق **نفس إعداد فيديو Unbiased Bob حرفياً** على جهاز Windows 11 بكرت **RTX 3090 (24GB, `sm_86`)**:
+
+- **المحرك:** `alesha-pro/maya-inkling-mini` (`maya-ik2.exe` — وليس `llama.cpp`) + `maya-vision.exe` على CPU (صفر استهلاك من VRAM).
+- **الموديل:** `Inkling-2-Mini-UD-Q4_K_XL.gguf` (يسحب تلقائياً نسخة `Old_Support` المتوافقة مع `maya-ik2` بعد تعديل Unsloth بتاريخ 23 نوفمبر).
+- **المُسرّع (Drafter):** `thinkingmachines/Inkling-2-Mini` → `mtp.safetensors` (DSpark الرسمي).
+- **إعدادات الفيديو الحرفية:** `--max-context 131072` · `IK2_KV=fp8` · `IK2_GATE_TILE=64` · `IK2_GATE_BF16=1` · `IK2_Q8_UNROLL=1` · `IK2_BATCH_PREFILL=1` · `IK2_DRAFT_CTX=65536`.
+- **الـ Sampling والتفكير:** `reasoning_effort = minimal (0.1)` · `temp 1.0` · `top_p 1.0` · `top_k 0` · `min_p 0.0`.
+- **وكيل البرمجة:** `Pi` (`@earendil-works/pi-coding-agent`) مضبوط تلقائياً في `~/.pi/agent/models.json`.
 
 ---
 
-## الترتيب السريع (3 أوامر فقط في PowerShell)
+## التشغيل بأمر واحد (PowerShell كمسؤول Administrator)
 
 ```powershell
-# 1) فحص العتاد والمساحة وبيئة البناء (قراءة فقط — آمن 100%)
-.\01_preflight_check.ps1
+.\RUN_ME_FIRST.ps1
+```
+*(أو دبل-كليك / Run as Administrator على `START_SETUP.bat`).*
 
-# 2) اختر مسار التثبيت:
-#    - المسار A (الأسرع — 130 إلى 210 tok/s مثل فيديو Unbiased Bob):
-.\02_install_maya_ik2.ps1
-#    - أو المسار B (تشغيل خلال 5 دقائق بدون Compile — 75 إلى 105 tok/s):
-.\03_install_unsloth_llamacpp.ps1
+### ماذا يفعل `RUN_ME_FIRST.ps1` بالترتيب؟
+1. [`01_preflight_check.ps1`](01_preflight_check.ps1) — يفحص القرص `D:` وكرت الـ 3090 والتعريف والمنافذ.
+2. [`00_install_prereqs_win.ps1`](00_install_prereqs_win.ps1) — يثبّت أي أداة ناقصة تلقائياً (Git، Python، VS 2022 C++ Build Tools، CUDA Toolkit 12.8 **بدون لمس تعريف الشاشة `580.88`**، وNode.js لـ Pi).
+3. [`02_install_maya_ik2.ps1`](02_install_maya_ik2.ps1) — يبني `maya-ik2.exe` (`sm_86`) و`maya-vision.exe` (CPU)، وينزّل الأوزان + `mtp.safetensors` + `mmproj-BF16.gguf` + Tokenizer ويكتب `ik2-mini-win3090.json`.
+4. [`06_setup_pi_harness.ps1`](06_setup_pi_harness.ps1) — يثبّت `Pi` ويربطه تلقائياً بالسيرفر المحلي `http://127.0.0.1:8094/v1`.
+5. [`04_start_inkling.ps1`](04_start_inkling.ps1) — يعزل GPU0 فقط، يحرر `:8092` مؤقتاً دون لمس GPU1، يشغّل `maya-ik2` على `:8094`، يتحقق من `resident=1`، ويجري اختباراً حياً (`17*19=323`).
 
-# 3) تشغيل السيرفر على GPU0 (مع تحرير مؤقت آمن لمنفذ 8092 + فحص resident=1 + اختبار حي):
-.\04_start_inkling.ps1 -Engine auto
-
-# 4) العودة الفورية (Rollback) إلى الخدمة السابقة على 8092 في أي وقت:
+### العودة الفورية (Rollback) للخدمة السابقة على `:8092`
+```powershell
 .\05_rollback_to_finance.ps1
 ```
-
----
-
-## لماذا هذه الإعدادات بالذات؟
-- **`--max-context 131072` + `IK2_KV=fp8`:** على Windows 11 المساحة الفعلية الحرة في RTX 3090 هي ~22.5–22.8 GiB. السياق الافتراضي (`262144`) في `maya-ik2` يخرج من وضع `resident=1` وتهبط السرعة لـ ~38 tok/s، بينما `131072` يستهلك ~21.6 GiB ويُبقي كل الـ 3,072 expert داخل الـ VRAM بسرعة كاملة (`resident=1`).
-- **إعداد التفكير (`reasoning_effort: minimal` / `0.1`):** الافتراضي (`high=0.9` أو `medium=0.7`) يجعل الموديل يهدر عشرات الآلاف من التوكنات. ضبطه على `minimal` (`0.1`) حقق **94.0% في 3.1 ساعات** في اختبار Unbiased Bob (مقابل 86.1% في 8.4 ساعات).
-- **إعدادات الـ Sampling:** `temperature=1.0`, `top_p=1.0`, `top_k=0`, `min_p=0.0`.
-- **معالجة نقل ملفات Unsloth (23 نوفمبر 2026):**
-  - `02_install_maya_ik2.ps1` ينزّل تلقائياً `Old_Support/Inkling-2-Mini-UD-Q4_K_XL.gguf_file` المتوافق مع `maya-ik2` ويعيد تسميته + ينزّل `mtp.safetensors` من `thinkingmachines/Inkling-2-Mini`.
-  - `03_install_unsloth_llamacpp.ps1` ينزّل النسخة الجديدة من الجذر `Inkling-2-Mini-UD-Q4_K_XL.gguf` + `dspark-Inkling-2-Mini-Q8_0.gguf` مع البناء الجاهز `b12649-mix-c7059d6` (CUDA 12 portable).
-- **عزل GPU0 بالكامل:** كل السكربتات تفرض `CUDA_DEVICE_ORDER=PCI_BUS_ID` و`CUDA_VISIBLE_DEVICES=0` ولا تلمس GPU1 نهائياً.

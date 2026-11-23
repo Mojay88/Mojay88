@@ -16,5 +16,12 @@
     "IK2_DRAFT_CTX": "65536"
   },
   "tokenizer": "D:/ai-models/inkling-2-mini/ik2/tokenizer",
-  "model_name": "inkling-2-mini"
+  "model_name": "inkling-2-mini",
+  "vision": {
+    "exe": "D:/mojay-engines/maya-inkling-mini/build-vision/bin/maya-vision.exe",
+    "mmproj": "D:/ai-models/inkling-2-mini/mmproj-BF16.gguf",
+    "model": "D:/ai-models/inkling-2-mini/Inkling-2-Mini-UD-Q4_K_XL.gguf",
+    "gpu": false,
+    "resident": true
+  }
 }
