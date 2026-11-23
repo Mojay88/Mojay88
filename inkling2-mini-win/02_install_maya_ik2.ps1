@@ -81,8 +81,8 @@ $venvScripts = Join-Path $venvDir "Scripts"
 if (-not (Test-Path $venvPy)) {
     python -m venv $venvDir
 }
-& $venvPip install -U pip wheel
-& $venvPip install -U numpy jinja2 regex pyyaml tqdm requests pillow psutil "jsonschema>=4.18,<5" huggingface_hub cmake ninja
+& $venvPy -m pip install -U pip wheel
+& $venvPy -m pip install -U numpy jinja2 regex pyyaml tqdm requests pillow psutil "jsonschema>=4.18,<5" huggingface_hub cmake ninja
 $env:PATH = "$venvScripts;$env:PATH"
 
 # 4. Build maya-ik2.exe
@@ -115,7 +115,7 @@ if (-not $SkipVisionBuild) {
         git clone --depth 1 -b b12590 https://github.com/ggml-org/llama.cpp.git $llamaVisionDir
     }
     cmake -S tools/vision -B build-vision -G Ninja -DCMAKE_BUILD_TYPE=Release `
-        -DLLAMA_DIR=third_party/llama.cpp-b12590
+        "-DLLAMA_DIR=third_party/llama.cpp-b12590"
     cmake --build build-vision -j $BuildJobs --target maya-vision
     if (Test-Path $visionExe) {
         $visionReady = $true
